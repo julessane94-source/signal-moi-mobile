@@ -47,7 +47,7 @@ export default {
       "color": "#ffffff"
      }
     ]
-    ],
+  ],
     extra: {
       apiUrl: process.env.EXPO_PUBLIC_API_URL || 'https://signal-moi-api.onrender.com/api',
       socketUrl: process.env.EXPO_PUBLIC_SOCKET_URL || 'https://signal-moi-api.onrender.com',
