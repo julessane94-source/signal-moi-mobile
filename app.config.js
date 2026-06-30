@@ -28,6 +28,26 @@ export default {
         'POST_NOTIFICATIONS'
       ]
     },
+    plugins: [
+        [
+         "expo-location",
+       {
+         "locationWhenInUsePermission": "Signal Moi utilise votre position pour localiser les signalements."
+     }
+    ],
+    [
+     "expo-camera",
+       {
+         "cameraPermission": "Signal Moi utilise la camera pour prendre des photos des incidents."
+     }
+    ],
+    [
+     "expo-notifications",
+       {
+      "color": "#ffffff"
+     }
+    ]
+    ],
     extra: {
       apiUrl: process.env.EXPO_PUBLIC_API_URL || 'https://signal-moi-api.onrender.com/api',
       socketUrl: process.env.EXPO_PUBLIC_SOCKET_URL || 'https://signal-moi-api.onrender.com',
