@@ -1,16 +1,18 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import { Alert, FlatList, Image, Linking, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native'
+import { Alert, FlatList, Image, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { COLORS } from '../../config/env'
-import { getLiveSessions, getPoliceDashboard, takePoliceAction } from '../../services/api'
+import { getLiveSessions, getPoliceAlerts, getPoliceDashboard, takePoliceAction } from '../../services/api'
 import { connectLiveSocket, disconnectLiveSocket } from '../../services/liveSocket'
 import { useAuth } from '../../context/AuthContext'
 import PrimaryButton from '../../components/PrimaryButton'
 import { requestLocalAlerts, scheduleLocalAlert } from '../../services/mobileNotifications'
+import VictimActions, { openVictimMap } from '../../components/VictimActions'
 
 export default function PoliceDashboardScreen() {
   const { token, user, signOut } = useAuth()
   const [cases, setCases] = useState([])
+  const [stats, setStats] = useState(null)
   const [lives, setLives] = useState([])
   const [refreshing, setRefreshing] = useState(false)
   const [filter, setFilter] = useState('attente')
@@ -24,13 +26,20 @@ export default function PoliceDashboardScreen() {
   }, [cases, filter])
 
   const loadData = useCallback(async () => {
-    const [dashboardResult, liveResult] = await Promise.allSettled([
+    const [dashboardResult, alertsResult, liveResult] = await Promise.allSettled([
       getPoliceDashboard(),
+      getPoliceAlerts(),
       getLiveSessions()
     ])
     if (dashboardResult.status === 'fulfilled') {
       const data = dashboardResult.value
-      setCases(data.signalements || data.alerts || data.cases || [])
+      setStats(data.stats || data)
+      if (alertsResult.status !== 'fulfilled') {
+        setCases(data.signalements || data.alerts || data.cases || [])
+      }
+    }
+    if (alertsResult.status === 'fulfilled') {
+      setCases(alertsResult.value.alerts || alertsResult.value.data || alertsResult.value || [])
     }
     if (liveResult.status === 'fulfilled') {
       setLives(liveResult.value.sessions || liveResult.value.liveSessions || liveResult.value || [])
@@ -50,17 +59,28 @@ export default function PoliceDashboardScreen() {
       setLives((current) => [payload.session || payload, ...current])
       await scheduleLocalAlert('Live citoyen en cours', 'Ouvrez l espace police pour suivre la video en temps reel.')
     }
+    const onLiveLocation = (payload) => {
+      setLives((current) => current.map((live) => (
+        live.sessionId === payload.sessionId ? { ...live, ...payload } : live
+      )))
+    }
 
     socket?.on('new_signalement', onNewCase)
     socket?.on('signalement:new', onNewCase)
     socket?.on('live_session_started', onLive)
     socket?.on('live:started', onLive)
+    socket?.on('live_recording_started', onLive)
+    socket?.on('live_recording_location', onLiveLocation)
+    socket?.on('live_recording_frame', onLiveLocation)
 
     return () => {
       socket?.off('new_signalement', onNewCase)
       socket?.off('signalement:new', onNewCase)
       socket?.off('live_session_started', onLive)
       socket?.off('live:started', onLive)
+      socket?.off('live_recording_started', onLive)
+      socket?.off('live_recording_location', onLiveLocation)
+      socket?.off('live_recording_frame', onLiveLocation)
       disconnectLiveSocket()
     }
   }, [loadData, token, user])
@@ -85,15 +105,7 @@ export default function PoliceDashboardScreen() {
   }
 
   function openMap(item) {
-    const latitude = item.latitude || item.lat
-    const longitude = item.longitude || item.lng
-    if (latitude && longitude) {
-      Linking.openURL(`https://www.google.com/maps/?q=${latitude},${longitude}`)
-      return
-    }
-    if (item.localisation || item.adresse || item.location) {
-      Linking.openURL(`https://www.google.com/maps/search/${encodeURIComponent(item.localisation || item.adresse || item.location)}`)
-    }
+    openVictimMap(item)
   }
 
   function Header() {
@@ -108,8 +120,8 @@ export default function PoliceDashboardScreen() {
         </View>
 
         <View style={styles.summaryGrid}>
-          <Metric label="File active" value={cases.length} icon="albums" />
-          <Metric label="Urgences" value={urgentCount} icon="warning" danger />
+          <Metric label="File active" value={stats?.totalAlerts || cases.length} icon="albums" />
+          <Metric label="Urgences" value={stats?.highPriority || urgentCount} icon="warning" danger />
           <Metric label="Lives" value={lives.length} icon="radio" danger />
         </View>
 
@@ -164,6 +176,7 @@ export default function PoliceDashboardScreen() {
             </View>
             <Text numberOfLines={2} style={styles.caseText}>{item.description || 'Aucun detail fourni.'}</Text>
             <Text style={styles.caseMeta}>{item.adresse || item.location || 'Adresse GPS disponible dans le dossier'}</Text>
+            <VictimActions item={item} compact />
             <View style={styles.caseActions}>
               <PrimaryButton title="Intervenir" tone="police" onPress={() => intervene(item.id || item._id)} style={styles.caseAction} />
               <Pressable style={styles.mapButton} onPress={() => openMap(item)}>

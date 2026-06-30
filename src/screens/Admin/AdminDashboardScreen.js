@@ -3,7 +3,8 @@ import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native
 import { Ionicons } from '@expo/vector-icons'
 import { COLORS } from '../../config/env'
 import ScreenHeader from '../../components/ScreenHeader'
-import { getAdminDashboard, getSiteConfig } from '../../services/api'
+import { getAdminOverview, getSiteConfig } from '../../services/api'
+import VictimActions from '../../components/VictimActions'
 
 export default function AdminDashboardScreen() {
   const [stats, setStats] = useState(null)
@@ -11,7 +12,7 @@ export default function AdminDashboardScreen() {
   const [refreshing, setRefreshing] = useState(false)
 
   const load = useCallback(async () => {
-    const [statsResult, configResult] = await Promise.allSettled([getAdminDashboard(), getSiteConfig()])
+    const [statsResult, configResult] = await Promise.allSettled([getAdminOverview(), getSiteConfig()])
     if (statsResult.status === 'fulfilled') setStats(statsResult.value)
     if (configResult.status === 'fulfilled') setConfig(configResult.value)
   }, [])
@@ -46,6 +47,16 @@ export default function AdminDashboardScreen() {
         <Text style={styles.title}>Configuration</Text>
         <Text style={styles.text}>Le logo, les textes d accueil, les images du diaporama et les statistiques restent geres par le backend Render et le dashboard Vercel.</Text>
       </View>
+      <View style={styles.card}>
+        <Text style={styles.title}>Derniers signalements</Text>
+        {(stats?.signalements || []).slice(0, 4).map((item) => (
+          <View key={item.id || item._id} style={styles.caseMini}>
+            <Text style={styles.caseTitle}>{item.type || item.titre || 'Signalement'}</Text>
+            <Text numberOfLines={2} style={styles.text}>{item.description || item.localisation || 'Dossier recu.'}</Text>
+            <VictimActions item={item} compact />
+          </View>
+        ))}
+      </View>
     </ScrollView>
   )
 }
@@ -71,5 +82,7 @@ const styles = StyleSheet.create({
   statusText: { color: '#d9fffa', marginTop: 8, lineHeight: 22 },
   card: { margin: 20, backgroundColor: '#fff', borderRadius: 18, borderWidth: 1, borderColor: COLORS.border, padding: 16 },
   title: { color: COLORS.ink, fontSize: 18, fontWeight: '900' },
-  text: { color: COLORS.muted, marginTop: 8, lineHeight: 22 }
+  text: { color: COLORS.muted, marginTop: 8, lineHeight: 22 },
+  caseMini: { borderTopWidth: 1, borderTopColor: COLORS.border, paddingTop: 12, marginTop: 12, gap: 8 },
+  caseTitle: { color: COLORS.ink, fontWeight: '900', textTransform: 'capitalize' }
 })

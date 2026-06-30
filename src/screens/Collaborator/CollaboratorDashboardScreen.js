@@ -5,6 +5,7 @@ import { COLORS } from '../../config/env'
 import ScreenHeader from '../../components/ScreenHeader'
 import PrimaryButton from '../../components/PrimaryButton'
 import { followCase, getCollaboratorDashboard, getCollaboratorStatistics } from '../../services/api'
+import VictimActions from '../../components/VictimActions'
 
 export default function CollaboratorDashboardScreen() {
   const [cases, setCases] = useState([])
@@ -63,6 +64,7 @@ export default function CollaboratorDashboardScreen() {
             <Text style={styles.title}>{item.type || item.titre || 'Dossier'}</Text>
             <Text numberOfLines={3} style={styles.text}>{item.description || 'Dossier a accompagner.'}</Text>
             <Text style={styles.meta}>{item.statut || item.status || 'nouveau'}</Text>
+            <VictimActions item={item} compact />
             <PrimaryButton title="Suivre le dossier" onPress={() => follow(item.id || item._id)} />
           </View>
         )}

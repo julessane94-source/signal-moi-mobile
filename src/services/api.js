@@ -98,6 +98,11 @@ export async function getPoliceDashboard() {
   return data
 }
 
+export async function getPoliceAlerts() {
+  const { data } = await api.get('/law-enforcement/alerts')
+  return data
+}
+
 export async function getCollaboratorDashboard() {
   const { data } = await api.get('/collaborator/dashboard')
   return data
