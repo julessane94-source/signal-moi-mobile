@@ -51,20 +51,27 @@ export default function VictimActions({ item, compact = false }) {
 
   return (
     <View style={[styles.row, compact && styles.compactRow]}>
-      <Action icon="call" label="Appeler" disabled={!phone} onPress={() => Linking.openURL(`tel:${phone}`)} />
-      <Action icon="chatbubble" label="SMS" disabled={!phone} onPress={() => Linking.openURL(`sms:${phone}`)} />
-      <Action icon="logo-whatsapp" label="WhatsApp" disabled={!cleanPhone} onPress={() => Linking.openURL(`https://wa.me/${cleanPhone}`)} />
-      <Action icon="mail" label="Email" disabled={!email} onPress={() => Linking.openURL(`mailto:${email}`)} />
+      <Action icon="call" label="Appeler" disabled={!phone} missing="Aucun telephone pour cette victime." onPress={() => Linking.openURL(`tel:${phone}`)} />
+      <Action icon="chatbubble" label="SMS" disabled={!phone} missing="Aucun telephone pour envoyer un SMS." onPress={() => Linking.openURL(`sms:${phone}`)} />
+      <Action icon="logo-whatsapp" label="WhatsApp" disabled={!cleanPhone} missing="Aucun numero WhatsApp disponible." onPress={() => Linking.openURL(`https://wa.me/${cleanPhone}`)} />
+      <Action icon="mail" label="Email" disabled={!email} missing="Aucun email pour cette victime." onPress={() => Linking.openURL(`mailto:${email}`)} />
       <Action icon="navigate" label="Localiser" onPress={() => openVictimMap(item)} primary />
     </View>
   )
 }
 
-function Action({ icon, label, onPress, disabled, primary }) {
+function Action({ icon, label, onPress, disabled, primary, missing }) {
+  function handlePress() {
+    if (disabled) {
+      Alert.alert('Information manquante', missing || 'Cette action n est pas disponible pour ce dossier.')
+      return
+    }
+    onPress()
+  }
+
   return (
     <Pressable
-      onPress={onPress}
-      disabled={disabled}
+      onPress={handlePress}
       style={[styles.action, primary && styles.primaryAction, disabled && styles.disabled]}
     >
       <Ionicons name={icon} size={18} color={primary ? '#fff' : COLORS.primaryDark} />

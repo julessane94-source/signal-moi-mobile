@@ -30,12 +30,23 @@ npm run start
 ```bash
 cd mobile
 npm install
+npx expo install --fix
 npm install --global eas-cli
 eas login
 eas build -p android --profile preview
 ```
 
 Le profil `preview` genere un APK installable directement sur Android. Les variables Render sont deja renseignees dans `eas.json`.
+
+## Si l'application ne s'ouvre pas
+
+1. Desinstallez l'ancien APK du telephone.
+2. Relancez `npm install` dans `mobile`.
+3. Relancez `npx expo install --fix` pour aligner les modules natifs avec SDK 54.
+4. Reconstruisez avec `eas build -p android --profile preview`.
+5. Installez le nouvel APK.
+
+Un APK deja installe ne connait pas les modules natifs ajoutes apres coup. Il faut donc reconstruire l'application apres l'ajout de Google, fichiers, partage, camera et notifications.
 
 Pour tester directement avec le backend Render actuel de Signal Moi:
 
@@ -47,6 +58,14 @@ EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID=
 EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID=
 EXPO_PUBLIC_ORANGE_MONEY_URL=
 ```
+
+Le client ID ci-dessus est un client Web. Pour activer le bouton Google sur Android, il faut creer un client OAuth Android separe dans Google Cloud avec:
+
+- package Android: `sn.signalmoi.mobile`;
+- empreinte SHA-1 de la cle utilisee pour le build Android;
+- puis renseigner `EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID`.
+
+Ne copiez pas le client Web dans `EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID`: Google peut refuser la connexion car le type de client OAuth n'est pas le meme.
 
 Si `signal-moi.sn` pointe deja vers le backend API, vous pouvez aussi utiliser:
 
@@ -94,7 +113,8 @@ L'application mobile ne doit pas se connecter directement a PostgreSQL. Elle app
 - Live mobile: camera native, envoi de frames regulieres vers Render et Socket.IO police.
 - Police: fil d'intervention, live en temps reel, notifications sonores locales.
 - Collaborateur: dossiers suivis, acces statistiques et campagnes.
-- Admin: supervision mobile et verification du logo/configuration depuis la base.
+- Admin: vrais chiffres depuis `/admin/users`, `/admin/campagnes`, `/admin/signalements` et statistiques Render.
+- Contact victime: appel, SMS, WhatsApp, email et localisation pour police, collaborateur et admin.
 - SUPERMAN: assistant Signal Moi avec connaissances integrees.
 - Google: connexion mobile preparee avec `expo-auth-session`.
 - Paiements: Wave fonctionnel via lien marchand, Orange Money configurable par `EXPO_PUBLIC_ORANGE_MONEY_URL` ou route backend.

@@ -16,19 +16,27 @@ export default function LoginScreen({ navigation }) {
   const [loading, setLoading] = useState(false)
   const [connectionState, setConnectionState] = useState('idle')
   const [googleLoading, setGoogleLoading] = useState(false)
+  const googleConfigured = Boolean(
+    GOOGLE_WEB_CLIENT_ID &&
+    (Platform.OS !== 'android' || GOOGLE_ANDROID_CLIENT_ID) &&
+    (Platform.OS !== 'ios' || GOOGLE_IOS_CLIENT_ID)
+  )
+  const safeAndroidClientId = GOOGLE_ANDROID_CLIENT_ID || 'disabled-android-client.apps.googleusercontent.com'
+  const safeIosClientId = GOOGLE_IOS_CLIENT_ID || 'disabled-ios-client.apps.googleusercontent.com'
+
   const [request, response, promptAsync] = Google.useAuthRequest({
     webClientId: GOOGLE_WEB_CLIENT_ID || undefined,
-    androidClientId: GOOGLE_ANDROID_CLIENT_ID || undefined,
-    iosClientId: GOOGLE_IOS_CLIENT_ID || undefined,
+    androidClientId: safeAndroidClientId,
+    iosClientId: safeIosClientId,
     scopes: ['openid', 'profile', 'email']
   })
 
   useEffect(() => {
     async function completeGoogleLogin() {
       if (response?.type !== 'success') return
-      const idToken = response.authentication?.idToken
+      const idToken = response.authentication?.idToken || response.params?.id_token
       if (!idToken) {
-        Alert.alert('Google non configure', 'Ajoutez les client IDs Google natifs pour recevoir un id_token.')
+        Alert.alert('Google incomplet', 'Google n a pas renvoye de jeton id_token.')
         return
       }
       setGoogleLoading(true)
@@ -42,6 +50,23 @@ export default function LoginScreen({ navigation }) {
     }
     completeGoogleLogin()
   }, [response])
+
+  function handleGoogleLogin() {
+    if (!googleConfigured) {
+      Alert.alert(
+        'Google a configurer',
+        'Ajoutez EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID dans .env/eas.json pour Android. Le bouton est desactive pour eviter le crash.'
+      )
+      return
+    }
+
+    if (!request) {
+      Alert.alert('Google en preparation', 'Reessayez dans quelques secondes.')
+      return
+    }
+
+    promptAsync()
+  }
 
   async function testConnection() {
     setConnectionState('loading')
@@ -115,10 +140,9 @@ export default function LoginScreen({ navigation }) {
         <PrimaryButton title="Se connecter" onPress={handleLogin} loading={loading} />
         <PrimaryButton
           title="Continuer avec Google"
-          onPress={() => promptAsync()}
+          onPress={handleGoogleLogin}
           loading={googleLoading}
           style={styles.googleButton}
-          disabled={!request}
         />
         <View style={styles.authLinks}>
           <Text onPress={() => navigation.navigate('Register')} style={styles.authLink}>Creer un compte</Text>
