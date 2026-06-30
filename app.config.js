@@ -46,7 +46,10 @@ export default {
        {
       "color": "#ffffff"
      }
-    ]
+    ],
+    "expo-asset",
+    "expo-sharing",
+    "expo-web-browser"
   ],
     extra: {
       apiUrl: process.env.EXPO_PUBLIC_API_URL || 'https://signal-moi-api.onrender.com/api',
