@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import { Alert } from 'react-native'
-import { getMe, login as loginRequest } from '../services/api'
+import { getMe, login as loginRequest, loginWithGoogle } from '../services/api'
 import { clearSession, getSession, saveSession } from '../services/storage'
 
 const AuthContext = createContext(null)
@@ -53,6 +53,22 @@ export function AuthProvider({ children }) {
     return true
   }
 
+  async function signInWithGoogle(idToken) {
+    const result = await loginWithGoogle(idToken)
+    const nextToken = result.token || result.accessToken
+    const nextUser = result.user || result.data?.user
+
+    if (!nextToken || !nextUser) {
+      Alert.alert('Connexion Google impossible', 'Le serveur n a pas renvoye une session valide.')
+      return false
+    }
+
+    await saveSession(nextToken, nextUser)
+    setToken(nextToken)
+    setUser(nextUser)
+    return true
+  }
+
   async function signOut() {
     await clearSession()
     setToken(null)
@@ -66,6 +82,7 @@ export function AuthProvider({ children }) {
       user,
       isAuthenticated: Boolean(token),
       signIn,
+      signInWithGoogle,
       signOut
     }),
     [loading, token, user]

@@ -1,14 +1,58 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Alert, KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, View } from 'react-native'
-import { COLORS } from '../../config/env'
+import * as Google from 'expo-auth-session/providers/google'
+import * as WebBrowser from 'expo-web-browser'
+import { COLORS, GOOGLE_ANDROID_CLIENT_ID, GOOGLE_IOS_CLIENT_ID, GOOGLE_WEB_CLIENT_ID } from '../../config/env'
 import { useAuth } from '../../context/AuthContext'
 import PrimaryButton from '../../components/PrimaryButton'
+import { checkBackendConnection } from '../../services/api'
 
-export default function LoginScreen() {
-  const { signIn } = useAuth()
+WebBrowser.maybeCompleteAuthSession()
+
+export default function LoginScreen({ navigation }) {
+  const { signIn, signInWithGoogle } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
+  const [connectionState, setConnectionState] = useState('idle')
+  const [googleLoading, setGoogleLoading] = useState(false)
+  const [request, response, promptAsync] = Google.useAuthRequest({
+    webClientId: GOOGLE_WEB_CLIENT_ID || undefined,
+    androidClientId: GOOGLE_ANDROID_CLIENT_ID || undefined,
+    iosClientId: GOOGLE_IOS_CLIENT_ID || undefined,
+    scopes: ['openid', 'profile', 'email']
+  })
+
+  useEffect(() => {
+    async function completeGoogleLogin() {
+      if (response?.type !== 'success') return
+      const idToken = response.authentication?.idToken
+      if (!idToken) {
+        Alert.alert('Google non configure', 'Ajoutez les client IDs Google natifs pour recevoir un id_token.')
+        return
+      }
+      setGoogleLoading(true)
+      try {
+        await signInWithGoogle(idToken)
+      } catch (error) {
+        Alert.alert('Connexion Google impossible', error.response?.data?.message || 'Verifiez la configuration Google.')
+      } finally {
+        setGoogleLoading(false)
+      }
+    }
+    completeGoogleLogin()
+  }, [response])
+
+  async function testConnection() {
+    setConnectionState('loading')
+    try {
+      await checkBackendConnection()
+      setConnectionState('online')
+    } catch (error) {
+      setConnectionState('offline')
+      Alert.alert('Backend indisponible', 'Impossible de joindre https://signal-moi-api.onrender.com pour le moment.')
+    }
+  }
 
   async function handleLogin() {
     if (!email || !password) {
@@ -37,6 +81,20 @@ export default function LoginScreen() {
       </View>
 
       <View style={styles.form}>
+        <View style={styles.connectionBox}>
+          <View style={[styles.statusDot, connectionState === 'online' && styles.onlineDot, connectionState === 'offline' && styles.offlineDot]} />
+          <Text style={styles.connectionText}>
+            {connectionState === 'online'
+              ? 'Backend Render connecte'
+              : connectionState === 'offline'
+                ? 'Backend Render inaccessible'
+                : 'Backend Render pret a tester'}
+          </Text>
+          <Text onPress={testConnection} style={styles.testLink}>
+            {connectionState === 'loading' ? 'Test...' : 'Tester'}
+          </Text>
+        </View>
+
         <TextInput
           autoCapitalize="none"
           keyboardType="email-address"
@@ -55,6 +113,17 @@ export default function LoginScreen() {
           style={styles.input}
         />
         <PrimaryButton title="Se connecter" onPress={handleLogin} loading={loading} />
+        <PrimaryButton
+          title="Continuer avec Google"
+          onPress={() => promptAsync()}
+          loading={googleLoading}
+          style={styles.googleButton}
+          disabled={!request}
+        />
+        <View style={styles.authLinks}>
+          <Text onPress={() => navigation.navigate('Register')} style={styles.authLink}>Creer un compte</Text>
+          <Text onPress={() => navigation.navigate('ForgotPassword')} style={styles.authLink}>Mot de passe oublie</Text>
+        </View>
       </View>
     </KeyboardAvoidingView>
   )
@@ -97,6 +166,50 @@ const styles = StyleSheet.create({
   },
   form: {
     gap: 14
+  },
+  connectionBox: {
+    minHeight: 48,
+    borderRadius: 14,
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    paddingHorizontal: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 9
+  },
+  statusDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: '#c4cbd0'
+  },
+  onlineDot: {
+    backgroundColor: COLORS.primary
+  },
+  offlineDot: {
+    backgroundColor: COLORS.danger
+  },
+  connectionText: {
+    flex: 1,
+    color: COLORS.muted,
+    fontWeight: '700'
+  },
+  testLink: {
+    color: COLORS.primary,
+    fontWeight: '900'
+  },
+  authLinks: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 12
+  },
+  authLink: {
+    color: COLORS.primary,
+    fontWeight: '900'
+  },
+  googleButton: {
+    backgroundColor: '#1f2937'
   },
   input: {
     minHeight: 54,

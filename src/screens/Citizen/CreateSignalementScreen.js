@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import * as ImagePicker from 'expo-image-picker'
-import { Camera } from 'expo-camera'
+import { requestCameraPermissionsAsync, requestMicrophonePermissionsAsync } from 'expo-camera'
 import { COLORS } from '../../config/env'
 import PrimaryButton from '../../components/PrimaryButton'
 import { createSignalement } from '../../services/api'
@@ -16,7 +16,7 @@ const quickTypes = [
   { type: 'autre', label: 'Autre', icon: 'chatbubble-ellipses', tone: COLORS.primary }
 ]
 
-export default function CreateSignalementScreen() {
+export default function CreateSignalementScreen({ navigation }) {
   const { position, address, requestCurrentLocation } = useLocation()
   const [selectedType, setSelectedType] = useState('violence')
   const [description, setDescription] = useState('')
@@ -38,13 +38,28 @@ export default function CreateSignalementScreen() {
   }
 
   async function startLive() {
-    const cameraPermission = await Camera.requestCameraPermissionsAsync()
-    const microphonePermission = await Camera.requestMicrophonePermissionsAsync()
+    const cameraPermission = await requestCameraPermissionsAsync()
+    const microphonePermission = await requestMicrophonePermissionsAsync()
     if (!cameraPermission.granted || !microphonePermission.granted) {
       Alert.alert('Camera requise', 'Autorisez la camera et le micro pour lancer un live.')
       return
     }
-    Alert.alert('Live pret', 'Le module camera live peut maintenant etre branche sur les sockets existants.')
+    const coords = position || (await requestCurrentLocation())
+    if (!coords) {
+      Alert.alert('GPS requis', 'Activez la localisation avant le live.')
+      return
+    }
+
+    const params = {
+      sessionId: `mobile-live-${Date.now()}`,
+      type: selectedType,
+      description: description || `Alerte live mobile: ${selectedType}`,
+      latitude: coords.latitude,
+      longitude: coords.longitude
+    }
+    const parentNavigation = navigation.getParent?.()
+    if (parentNavigation) parentNavigation.navigate('LiveCamera', params)
+    else navigation.navigate('LiveCamera', params)
   }
 
   async function submit() {

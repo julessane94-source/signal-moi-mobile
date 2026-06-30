@@ -5,59 +5,94 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack'
 import { COLORS } from '../config/env'
 import { useAuth } from '../context/AuthContext'
 import LoginScreen from '../screens/Auth/LoginScreen'
+import RegisterScreen from '../screens/Auth/RegisterScreen'
+import ForgotPasswordScreen from '../screens/Auth/ForgotPasswordScreen'
 import CitizenHomeScreen from '../screens/Citizen/CitizenHomeScreen'
 import CreateSignalementScreen from '../screens/Citizen/CreateSignalementScreen'
+import LiveCameraScreen from '../screens/Citizen/LiveCameraScreen'
 import PoliceDashboardScreen from '../screens/Police/PoliceDashboardScreen'
+import CollaboratorDashboardScreen from '../screens/Collaborator/CollaboratorDashboardScreen'
+import AdminDashboardScreen from '../screens/Admin/AdminDashboardScreen'
 import LoadingScreen from '../screens/Shared/LoadingScreen'
+import CampaignsScreen from '../screens/Shared/CampaignsScreen'
+import SupermanScreen from '../screens/Shared/SupermanScreen'
+import StatisticsScreen from '../screens/Shared/StatisticsScreen'
+import ProfileScreen from '../screens/Shared/ProfileScreen'
 
 const Stack = createNativeStackNavigator()
 const Tab = createBottomTabNavigator()
 
+const tabStyle = {
+  height: 70,
+  paddingBottom: 10,
+  paddingTop: 8
+}
+
+const iconByRoute = {
+  Accueil: 'home',
+  Signaler: 'megaphone',
+  Campagnes: 'calendar',
+  SUPERMAN: 'chatbubble-ellipses',
+  Compte: 'person-circle',
+  Interventions: 'shield-checkmark',
+  Statistiques: 'bar-chart',
+  Collaborateur: 'people',
+  Admin: 'settings'
+}
+
+function screenOptions(activeColor) {
+  return ({ route }) => ({
+    headerShown: false,
+    tabBarActiveTintColor: activeColor,
+    tabBarInactiveTintColor: COLORS.muted,
+    tabBarStyle: tabStyle,
+    tabBarIcon: ({ color, size }) => (
+      <Ionicons name={iconByRoute[route.name] || 'ellipse'} size={size} color={color} />
+    )
+  })
+}
+
 function CitizenTabs() {
   return (
-    <Tab.Navigator
-      screenOptions={({ route }) => ({
-        headerShown: false,
-        tabBarActiveTintColor: COLORS.primary,
-        tabBarInactiveTintColor: COLORS.muted,
-        tabBarStyle: {
-          height: 70,
-          paddingBottom: 10,
-          paddingTop: 8
-        },
-        tabBarIcon: ({ color, size }) => {
-          const icon = route.name === 'Signaler' ? 'megaphone' : 'home'
-          return <Ionicons name={icon} size={size} color={color} />
-        }
-      })}
-    >
+    <Tab.Navigator screenOptions={screenOptions(COLORS.primary)}>
       <Tab.Screen name="Accueil" component={CitizenHomeScreen} />
       <Tab.Screen name="Signaler" component={CreateSignalementScreen} />
+      <Tab.Screen name="Campagnes" component={CampaignsScreen} />
+      <Tab.Screen name="SUPERMAN" component={SupermanScreen} />
+      <Tab.Screen name="Compte" component={ProfileScreen} />
     </Tab.Navigator>
   )
 }
 
 function PoliceTabs() {
   return (
-    <Tab.Navigator
-      screenOptions={{
-        headerShown: false,
-        tabBarActiveTintColor: COLORS.police,
-        tabBarInactiveTintColor: COLORS.muted,
-        tabBarStyle: {
-          height: 70,
-          paddingBottom: 10,
-          paddingTop: 8
-        }
-      }}
-    >
-      <Tab.Screen
-        name="Interventions"
-        component={PoliceDashboardScreen}
-        options={{
-          tabBarIcon: ({ color, size }) => <Ionicons name="shield-checkmark" size={size} color={color} />
-        }}
-      />
+    <Tab.Navigator screenOptions={screenOptions(COLORS.police)}>
+      <Tab.Screen name="Interventions" component={PoliceDashboardScreen} />
+      <Tab.Screen name="SUPERMAN" component={SupermanScreen} />
+      <Tab.Screen name="Compte" component={ProfileScreen} />
+    </Tab.Navigator>
+  )
+}
+
+function CollaboratorTabs() {
+  return (
+    <Tab.Navigator screenOptions={screenOptions(COLORS.primary)}>
+      <Tab.Screen name="Collaborateur" component={CollaboratorDashboardScreen} />
+      <Tab.Screen name="Campagnes" component={CampaignsScreen} />
+      <Tab.Screen name="Statistiques" component={StatisticsScreen} />
+      <Tab.Screen name="SUPERMAN" component={SupermanScreen} />
+      <Tab.Screen name="Compte" component={ProfileScreen} />
+    </Tab.Navigator>
+  )
+}
+
+function AdminTabs() {
+  return (
+    <Tab.Navigator screenOptions={screenOptions(COLORS.primaryDark)}>
+      <Tab.Screen name="Admin" component={AdminDashboardScreen} />
+      <Tab.Screen name="Statistiques" component={StatisticsScreen} />
+      <Tab.Screen name="SUPERMAN" component={SupermanScreen} />
+      <Tab.Screen name="Compte" component={ProfileScreen} />
     </Tab.Navigator>
   )
 }
@@ -65,6 +100,14 @@ function PoliceTabs() {
 function RoleHome() {
   const { user } = useAuth()
   const role = String(user?.role || '').toLowerCase()
+
+  if (role.includes('admin') || role.includes('administrateur')) {
+    return <AdminTabs />
+  }
+
+  if (role.includes('collaborateur') || role.includes('collaborator')) {
+    return <CollaboratorTabs />
+  }
 
   if (role.includes('police') || role.includes('gendarmerie') || role.includes('force')) {
     return <PoliceTabs />
@@ -82,9 +125,14 @@ export default function AppNavigator() {
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       {isAuthenticated ? (
         <Stack.Screen name="RoleHome" component={RoleHome} />
-      ) : (
-        <Stack.Screen name="Login" component={LoginScreen} />
+      ) : ( 
+        <>
+          <Stack.Screen name="Login" component={LoginScreen} />
+          <Stack.Screen name="Register" component={RegisterScreen} />
+          <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
+        </>
       )}
+      <Stack.Screen name="LiveCamera" component={LiveCameraScreen} />
     </Stack.Navigator>
   )
 }
