@@ -1,4 +1,5 @@
 export default {
+  owner: 'julessane94',
   expo: {
     name: 'Signal Moi',
     slug: 'signal-moi-mobile',
@@ -29,7 +30,8 @@ export default {
     },
     extra: {
       apiUrl: process.env.EXPO_PUBLIC_API_URL || 'https://signal-moi-api.onrender.com/api',
-      socketUrl: process.env.EXPO_PUBLIC_SOCKET_URL || 'https://signal-moi-api.onrender.com'
+      socketUrl: process.env.EXPO_PUBLIC_SOCKET_URL || 'https://signal-moi-api.onrender.com',
+      eas: { projectId: "cbf843a4-2b7e-4586-a992-13953f64c1c2" }
     }
   }
 }
