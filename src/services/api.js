@@ -113,6 +113,39 @@ export async function getAdminDashboard() {
   return data
 }
 
+export async function getAdminSignalements() {
+  const { data } = await api.get('/admin/signalements')
+  return data
+}
+
+export async function getAdminOverview() {
+  const [stats, users, campagnes, signalements] = await Promise.allSettled([
+    api.get('/admin/statistics'),
+    api.get('/admin/users'),
+    api.get('/admin/campagnes'),
+    api.get('/admin/signalements')
+  ])
+
+  const usersData = users.status === 'fulfilled' ? users.value.data : []
+  const campagnesData = campagnes.status === 'fulfilled' ? campagnes.value.data : []
+  const signalementsData = signalements.status === 'fulfilled' ? signalements.value.data : []
+  const statsData = stats.status === 'fulfilled' ? stats.value.data : {}
+
+  const userList = usersData.users || usersData.data || usersData || []
+  const campagneList = campagnesData.campagnes || campagnesData.data || campagnesData || []
+  const signalementList = signalementsData.signalements || signalementsData.data || signalementsData || []
+
+  return {
+    ...statsData,
+    totalUsers: Array.isArray(userList) ? userList.length : Number(statsData.totalUsers || 0),
+    totalCampagnes: Array.isArray(campagneList) ? campagneList.length : Number(statsData.totalCampagnes || 0),
+    totalSignalements: Array.isArray(signalementList) ? signalementList.length : Number(statsData.totalSignalements || statsData.total || 0),
+    users: userList,
+    campagnes: campagneList,
+    signalements: signalementList
+  }
+}
+
 export async function getCompleteStatistics() {
   const [overview, byType, byGender, byAge] = await Promise.all([
     api.get('/statistics/overview'),

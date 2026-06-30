@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react'
 import { Alert, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { COLORS } from '../../config/env'
-import { getCampagnes, getCitizenDashboard, joinCampagne } from '../../services/api'
+import { getCampagnes, getCitizenDashboard, getCitizenSignalements, joinCampagne } from '../../services/api'
 import { useAuth } from '../../context/AuthContext'
 import { useLocation } from '../../context/LocationContext'
 import PrimaryButton from '../../components/PrimaryButton'
@@ -12,16 +12,21 @@ export default function CitizenHomeScreen() {
   const { position, address, requestCurrentLocation } = useLocation()
   const [dashboard, setDashboard] = useState(null)
   const [campagnes, setCampagnes] = useState([])
+  const [signalements, setSignalements] = useState([])
   const [refreshing, setRefreshing] = useState(false)
 
   const loadData = useCallback(async () => {
-    const [dashboardResult, campagnesResult] = await Promise.allSettled([
+    const [dashboardResult, campagnesResult, signalementsResult] = await Promise.allSettled([
       getCitizenDashboard(),
-      getCampagnes()
+      getCampagnes(),
+      getCitizenSignalements()
     ])
     if (dashboardResult.status === 'fulfilled') setDashboard(dashboardResult.value)
     if (campagnesResult.status === 'fulfilled') {
       setCampagnes(campagnesResult.value.campagnes || campagnesResult.value || [])
+    }
+    if (signalementsResult.status === 'fulfilled') {
+      setSignalements(signalementsResult.value.signalements || signalementsResult.value.data || signalementsResult.value || [])
     }
   }, [])
 
@@ -68,6 +73,10 @@ export default function CitizenHomeScreen() {
       </View>
 
       <View style={styles.alertCard}>
+        <View style={styles.alertTop}>
+          <Ionicons name="shield-checkmark" size={24} color="#fff" />
+          <Text style={styles.alertBadge}>Sedhiou</Text>
+        </View>
         <Text style={styles.alertTitle}>Besoin d'aide maintenant ?</Text>
         <Text style={styles.alertText}>
           Ouvrez l'onglet Signaler. Votre position GPS sera ajoutee automatiquement au dossier.
@@ -78,6 +87,23 @@ export default function CitizenHomeScreen() {
         <Stat label="Signalements" value={dashboard?.totalSignalements || dashboard?.stats?.total || 0} icon="document-text" />
         <Stat label="En cours" value={dashboard?.enCours || dashboard?.stats?.enCours || 0} icon="time" />
       </View>
+
+      <View style={styles.quickRow}>
+        <Quick label="Live" icon="videocam" tone={COLORS.danger} />
+        <Quick label="GPS" icon="navigate" tone={COLORS.primary} />
+        <Quick label="Suivi" icon="eye" tone="#1d4ed8" />
+      </View>
+
+      <Text style={styles.sectionTitle}>Mes derniers signalements</Text>
+      {signalements.slice(0, 3).map((item) => (
+        <View key={item.id || item._id} style={styles.caseCard}>
+          <View style={styles.caseTop}>
+            <Text style={styles.caseType}>{item.type || 'Signalement'}</Text>
+            <Text style={styles.caseStatus}>{item.statut || item.status || 'recu'}</Text>
+          </View>
+          <Text numberOfLines={2} style={styles.cardText}>{item.description || 'Signalement transmis.'}</Text>
+        </View>
+      ))}
 
       <Text style={styles.sectionTitle}>Campagnes disponibles</Text>
       {campagnes.slice(0, 4).map((campagne) => (
@@ -103,6 +129,17 @@ function Stat({ label, value, icon }) {
       <Ionicons name={icon} size={22} color={COLORS.primary} />
       <Text style={styles.statValue}>{value}</Text>
       <Text style={styles.statLabel}>{label}</Text>
+    </View>
+  )
+}
+
+function Quick({ label, icon, tone }) {
+  return (
+    <View style={styles.quick}>
+      <View style={[styles.quickIcon, { backgroundColor: tone }]}>
+        <Ionicons name={icon} size={20} color="#fff" />
+      </View>
+      <Text style={styles.quickText}>{label}</Text>
     </View>
   )
 }
@@ -141,6 +178,16 @@ const styles = StyleSheet.create({
     borderRadius: 22,
     padding: 22
   },
+  alertTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 14
+  },
+  alertBadge: {
+    color: '#d9fffa',
+    fontWeight: '900'
+  },
   alertTitle: {
     color: '#fff',
     fontSize: 22,
@@ -155,6 +202,31 @@ const styles = StyleSheet.create({
   grid: {
     flexDirection: 'row',
     gap: 12
+  },
+  quickRow: {
+    flexDirection: 'row',
+    gap: 10
+  },
+  quick: {
+    flex: 1,
+    backgroundColor: '#fff',
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    padding: 14,
+    alignItems: 'center',
+    gap: 8
+  },
+  quickIcon: {
+    width: 42,
+    height: 42,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  quickText: {
+    color: COLORS.ink,
+    fontWeight: '900'
   },
   stat: {
     flex: 1,
@@ -186,6 +258,28 @@ const styles = StyleSheet.create({
     borderColor: COLORS.border,
     padding: 16,
     gap: 10
+  },
+  caseCard: {
+    backgroundColor: '#fff',
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    padding: 16,
+    gap: 8
+  },
+  caseTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 10
+  },
+  caseType: {
+    color: COLORS.ink,
+    fontWeight: '900',
+    textTransform: 'capitalize'
+  },
+  caseStatus: {
+    color: COLORS.primary,
+    fontWeight: '900'
   },
   cardTitle: {
     color: COLORS.ink,
