@@ -182,10 +182,12 @@ export async function createSignalement(payload) {
     if (value === undefined || value === null || value === '') return
     if (key === 'files') {
       value.forEach((file, index) => {
+        const uriParts = String(file.uri || '').split('.')
+        const extension = uriParts.length > 1 ? uriParts.pop() : 'jpg'
         form.append('fichiers', {
           uri: file.uri,
-          name: file.fileName || `preuve-${index + 1}.jpg`,
-          type: file.mimeType || 'image/jpeg'
+          name: file.fileName || file.name || `preuve-${index + 1}.${extension}`,
+          type: file.mimeType || file.type || (extension === 'png' ? 'image/png' : 'image/jpeg')
         })
       })
       return

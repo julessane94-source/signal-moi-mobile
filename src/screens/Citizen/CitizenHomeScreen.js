@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react'
-import { Alert, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native'
+import { Alert, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { COLORS } from '../../config/env'
 import { getCampagnes, getCitizenDashboard, getCitizenSignalements, joinCampagne } from '../../services/api'
@@ -7,7 +7,7 @@ import { useAuth } from '../../context/AuthContext'
 import { useLocation } from '../../context/LocationContext'
 import PrimaryButton from '../../components/PrimaryButton'
 
-export default function CitizenHomeScreen() {
+export default function CitizenHomeScreen({ navigation }) {
   const { user, signOut } = useAuth()
   const { position, address, requestCurrentLocation } = useLocation()
   const [dashboard, setDashboard] = useState(null)
@@ -23,7 +23,8 @@ export default function CitizenHomeScreen() {
     ])
     if (dashboardResult.status === 'fulfilled') setDashboard(dashboardResult.value)
     if (campagnesResult.status === 'fulfilled') {
-      setCampagnes(campagnesResult.value.campagnes || campagnesResult.value || [])
+      const payload = campagnesResult.value
+      setCampagnes(payload.campagnes || payload.data?.campagnes || payload.data || payload || [])
     }
     if (signalementsResult.status === 'fulfilled') {
       setSignalements(signalementsResult.value.signalements || signalementsResult.value.data || signalementsResult.value || [])
@@ -45,6 +46,10 @@ export default function CitizenHomeScreen() {
   }
 
   async function handleJoin(campaignId) {
+    if (!campaignId) {
+      Alert.alert('Campagne indisponible', 'Cette campagne n a pas encore d identifiant valide.')
+      return
+    }
     try {
       await joinCampagne(campaignId)
       Alert.alert('Inscription envoyee', 'Vous etes inscrit a cette campagne.')
@@ -55,6 +60,10 @@ export default function CitizenHomeScreen() {
   }
 
   const locationLabel = address?.city || address?.subregion || address?.region || 'Position precise activee'
+
+  function goToTab(tabName) {
+    navigation.navigate(tabName)
+  }
 
   return (
     <ScrollView
@@ -89,9 +98,18 @@ export default function CitizenHomeScreen() {
       </View>
 
       <View style={styles.quickRow}>
-        <Quick label="Live" icon="videocam" tone={COLORS.danger} />
-        <Quick label="GPS" icon="navigate" tone={COLORS.primary} />
-        <Quick label="Suivi" icon="eye" tone="#1d4ed8" />
+        <Quick label="Live" icon="videocam" tone={COLORS.danger} onPress={() => {
+          Alert.alert('Live', 'Ouvrez le bouton Lancer un live dans l onglet Signaler.')
+          goToTab('Signaler')
+        }} />
+        <Quick label="GPS" icon="navigate" tone={COLORS.primary} onPress={async () => {
+          const coords = await requestCurrentLocation()
+          Alert.alert('GPS', coords ? 'Position mise a jour.' : 'Autorisez la localisation du telephone.')
+        }} />
+        <Quick label="Suivi" icon="eye" tone="#1d4ed8" onPress={async () => {
+          await refresh()
+          Alert.alert('Suivi', 'Vos derniers signalements sont actualises.')
+        }} />
       </View>
 
       <Text style={styles.sectionTitle}>Mes derniers signalements</Text>
@@ -133,14 +151,14 @@ function Stat({ label, value, icon }) {
   )
 }
 
-function Quick({ label, icon, tone }) {
+function Quick({ label, icon, tone, onPress }) {
   return (
-    <View style={styles.quick}>
+    <Pressable onPress={onPress} style={({ pressed }) => [styles.quick, pressed && styles.quickPressed]}>
       <View style={[styles.quickIcon, { backgroundColor: tone }]}>
         <Ionicons name={icon} size={20} color="#fff" />
       </View>
       <Text style={styles.quickText}>{label}</Text>
-    </View>
+    </Pressable>
   )
 }
 
@@ -216,6 +234,9 @@ const styles = StyleSheet.create({
     padding: 14,
     alignItems: 'center',
     gap: 8
+  },
+  quickPressed: {
+    opacity: 0.75
   },
   quickIcon: {
     width: 42,

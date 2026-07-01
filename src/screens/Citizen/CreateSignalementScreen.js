@@ -16,6 +16,14 @@ const quickTypes = [
   { type: 'autre', label: 'Autre', icon: 'chatbubble-ellipses', tone: COLORS.primary }
 ]
 
+const typeLabels = {
+  violence: 'Violence',
+  vol: 'Vol',
+  urgence_medicale: 'Urgence sante',
+  danger: 'Danger',
+  autre: 'Autre'
+}
+
 export default function CreateSignalementScreen({ navigation }) {
   const { position, address, requestCurrentLocation } = useLocation()
   const [selectedType, setSelectedType] = useState('violence')
@@ -57,9 +65,17 @@ export default function CreateSignalementScreen({ navigation }) {
       latitude: coords.latitude,
       longitude: coords.longitude
     }
-    const parentNavigation = navigation.getParent?.()
-    if (parentNavigation) parentNavigation.navigate('LiveCamera', params)
-    else navigation.navigate('LiveCamera', params)
+    openRootScreen('LiveCamera', params)
+  }
+
+  function openRootScreen(screenName, params) {
+    let current = navigation
+    while (current?.getParent?.()) {
+      const parent = current.getParent()
+      if (!parent) break
+      current = parent
+    }
+    current?.navigate?.(screenName, params)
   }
 
   async function submit() {
@@ -71,12 +87,18 @@ export default function CreateSignalementScreen({ navigation }) {
         return
       }
 
+      const localisation = [address?.street, address?.city, address?.region]
+        .filter(Boolean)
+        .join(', ') || `GPS ${coords.latitude.toFixed(5)}, ${coords.longitude.toFixed(5)}`
+      const label = typeLabels[selectedType] || selectedType
+
       await createSignalement({
+        titre: `Signalement ${label}`,
         type: selectedType,
-        description: description || `Signalement rapide: ${selectedType}`,
+        description: description || `Signalement rapide: ${label}`,
+        localisation,
         latitude: coords.latitude,
         longitude: coords.longitude,
-        adresse: [address?.street, address?.city, address?.region].filter(Boolean).join(', '),
         files
       })
 

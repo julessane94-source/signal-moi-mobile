@@ -124,7 +124,10 @@ export default function AppNavigator() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       {isAuthenticated ? (
-        <Stack.Screen name="RoleHome" component={RoleHome} />
+        <>
+          <Stack.Screen name="RoleHome" component={RoleHome} />
+          <Stack.Screen name="LiveCamera" component={LiveCameraScreen} />
+        </>
       ) : ( 
         <>
           <Stack.Screen name="Login" component={LoginScreen} />
@@ -132,7 +135,6 @@ export default function AppNavigator() {
           <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
         </>
       )}
-      <Stack.Screen name="LiveCamera" component={LiveCameraScreen} />
     </Stack.Navigator>
   )
 }
