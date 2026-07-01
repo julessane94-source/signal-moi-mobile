@@ -6,6 +6,7 @@ export default {
     scheme: 'signalmoi',
     version: '0.1.0',
     orientation: 'portrait',
+    icon: './assets/icon.png',
     userInterfaceStyle: 'light',
     jsEngine: 'hermes',
     assetBundlePatterns: ['**/*'],

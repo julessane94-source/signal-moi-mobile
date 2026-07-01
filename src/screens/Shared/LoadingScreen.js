@@ -1,13 +1,13 @@
 import React from 'react'
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native'
+import { ActivityIndicator, Image, StyleSheet, Text, View } from 'react-native'
 import { COLORS } from '../../config/env'
+
+const logo = require('../../../assets/logo.png')
 
 export default function LoadingScreen() {
   return (
     <View style={styles.container}>
-      <View style={styles.logo}>
-        <Text style={styles.logoText}>SM</Text>
-      </View>
+      <Image source={logo} style={styles.logo} resizeMode="contain" />
       <ActivityIndicator color={COLORS.primary} size="large" />
       <Text style={styles.text}>Signal Moi charge votre espace...</Text>
     </View>
@@ -23,17 +23,8 @@ const styles = StyleSheet.create({
     gap: 18
   },
   logo: {
-    width: 72,
-    height: 72,
-    borderRadius: 22,
-    backgroundColor: COLORS.primary,
-    alignItems: 'center',
-    justifyContent: 'center'
-  },
-  logoText: {
-    color: '#fff',
-    fontSize: 28,
-    fontWeight: '900'
+    width: 140,
+    height: 92
   },
   text: {
     color: COLORS.muted,

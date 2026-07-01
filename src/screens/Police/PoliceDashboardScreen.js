@@ -8,6 +8,7 @@ import { useAuth } from '../../context/AuthContext'
 import PrimaryButton from '../../components/PrimaryButton'
 import { requestLocalAlerts, scheduleLocalAlert } from '../../services/mobileNotifications'
 import VictimActions, { openVictimMap } from '../../components/VictimActions'
+import { playRoleAlertSound } from '../../services/soundAlerts'
 
 export default function PoliceDashboardScreen() {
   const { token, user, signOut } = useAuth()
@@ -53,10 +54,12 @@ export default function PoliceDashboardScreen() {
     const socket = connectLiveSocket(token, user)
     const onNewCase = async (payload) => {
       setCases((current) => [payload.signalement || payload, ...current])
+      await playRoleAlertSound()
       await scheduleLocalAlert('Nouveau signalement', 'Une nouvelle alerte citoyenne vient d arriver.')
     }
     const onLive = async (payload) => {
       setLives((current) => [payload.session || payload, ...current])
+      await playRoleAlertSound()
       await scheduleLocalAlert('Live citoyen en cours', 'Ouvrez l espace police pour suivre la video en temps reel.')
     }
     const onLiveLocation = (payload) => {

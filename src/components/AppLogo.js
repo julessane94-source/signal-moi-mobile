@@ -3,6 +3,8 @@ import { Image, StyleSheet, Text, View } from 'react-native'
 import { COLORS, resolveMediaUrl } from '../config/env'
 import { getSiteConfig } from '../services/api'
 
+const localLogo = require('../../assets/logo.png')
+
 export default function AppLogo({ size = 44 }) {
   const [logoUrl, setLogoUrl] = useState(null)
 
@@ -18,14 +20,12 @@ export default function AppLogo({ size = 44 }) {
     }
   }, [])
 
-  if (logoUrl) {
-    return <Image source={{ uri: logoUrl }} style={[styles.image, { width: size, height: size, borderRadius: size / 4 }]} />
-  }
-
   return (
-    <View style={[styles.fallback, { width: size, height: size, borderRadius: size / 4 }]}>
-      <Text style={[styles.text, { fontSize: Math.max(14, size * 0.38) }]}>SM</Text>
-    </View>
+    <Image
+      source={logoUrl ? { uri: logoUrl } : localLogo}
+      style={[styles.image, { width: size, height: size, borderRadius: size / 4 }]}
+      resizeMode="contain"
+    />
   )
 }
 

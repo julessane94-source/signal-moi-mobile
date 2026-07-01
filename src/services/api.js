@@ -123,6 +123,36 @@ export async function getAdminSignalements() {
   return data
 }
 
+export async function getAdminUsers() {
+  const { data } = await api.get('/admin/users')
+  return data
+}
+
+export async function createAdminUser(payload) {
+  const { data } = await api.post('/admin/users', payload)
+  return data
+}
+
+export async function deleteAdminUser(id) {
+  const { data } = await api.delete(`/admin/users/${id}`)
+  return data
+}
+
+export async function getAdminCampagnes() {
+  const { data } = await api.get('/admin/campagnes')
+  return data
+}
+
+export async function deleteAdminSignalement(id) {
+  const { data } = await api.delete(`/admin/signalements/${id}`)
+  return data
+}
+
+export async function deleteAdminCampagne(id) {
+  const { data } = await api.delete(`/admin/campagnes/${id}`)
+  return data
+}
+
 export async function getAdminOverview() {
   const [stats, users, campagnes, signalements] = await Promise.allSettled([
     api.get('/admin/statistics'),
@@ -164,6 +194,11 @@ export async function getCompleteStatistics() {
     byGender: byGender.data,
     byAge: byAge.data
   }
+}
+
+export async function getAllSignalements() {
+  const { data } = await api.get('/signalements')
+  return data
 }
 
 export async function getLiveSessions() {
@@ -215,6 +250,41 @@ export async function updatePoliceCaseStatus(caseId, status) {
 
 export async function followCase(caseId) {
   const { data } = await api.post('/collaborator/follow', { caseId })
+  return data
+}
+
+export async function getCollaboratorSignalements() {
+  const { data } = await api.get('/collaborator/signalements')
+  return data
+}
+
+export async function getCollaboratorCampaigns() {
+  const { data } = await api.get('/collaborator/campaigns')
+  return data
+}
+
+export async function createCollaboratorCampaign(payload) {
+  const { data } = await api.post('/collaborator/campaigns', payload)
+  return data
+}
+
+export async function getCampaignRegistrants(id) {
+  const { data } = await api.get(`/campagnes/${id}/inscrits`)
+  return data
+}
+
+export async function getPlaidoyers() {
+  const { data } = await api.get('/plaidoyers')
+  return data
+}
+
+export async function createPlaidoyer(payload) {
+  const { data } = await api.post('/plaidoyers', payload)
+  return data
+}
+
+export async function getPlaidoyerSignatures(id) {
+  const { data } = await api.get(`/plaidoyers/${id}/signatures`)
   return data
 }
 

@@ -12,8 +12,11 @@ import CreateSignalementScreen from '../screens/Citizen/CreateSignalementScreen'
 import LiveCameraScreen from '../screens/Citizen/LiveCameraScreen'
 import PoliceDashboardScreen from '../screens/Police/PoliceDashboardScreen'
 import CollaboratorDashboardScreen from '../screens/Collaborator/CollaboratorDashboardScreen'
+import CollaboratorWorkScreen from '../screens/Collaborator/CollaboratorWorkScreen'
 import AdminDashboardScreen from '../screens/Admin/AdminDashboardScreen'
+import AdminManagementScreen from '../screens/Admin/AdminManagementScreen'
 import LoadingScreen from '../screens/Shared/LoadingScreen'
+import HomeScreen from '../screens/Shared/HomeScreen'
 import CampaignsScreen from '../screens/Shared/CampaignsScreen'
 import SupermanScreen from '../screens/Shared/SupermanScreen'
 import StatisticsScreen from '../screens/Shared/StatisticsScreen'
@@ -37,7 +40,9 @@ const iconByRoute = {
   Interventions: 'shield-checkmark',
   Statistiques: 'bar-chart',
   Collaborateur: 'people',
-  Admin: 'settings'
+  Travail: 'briefcase',
+  Admin: 'settings',
+  Gestion: 'construct'
 }
 
 function screenOptions(activeColor) {
@@ -67,6 +72,7 @@ function CitizenTabs() {
 function PoliceTabs() {
   return (
     <Tab.Navigator screenOptions={screenOptions(COLORS.police)}>
+      <Tab.Screen name="Accueil" component={HomeScreen} />
       <Tab.Screen name="Interventions" component={PoliceDashboardScreen} />
       <Tab.Screen name="SUPERMAN" component={SupermanScreen} />
       <Tab.Screen name="Compte" component={ProfileScreen} />
@@ -77,10 +83,11 @@ function PoliceTabs() {
 function CollaboratorTabs() {
   return (
     <Tab.Navigator screenOptions={screenOptions(COLORS.primary)}>
+      <Tab.Screen name="Accueil" component={HomeScreen} />
       <Tab.Screen name="Collaborateur" component={CollaboratorDashboardScreen} />
+      <Tab.Screen name="Travail" component={CollaboratorWorkScreen} />
       <Tab.Screen name="Campagnes" component={CampaignsScreen} />
       <Tab.Screen name="Statistiques" component={StatisticsScreen} />
-      <Tab.Screen name="SUPERMAN" component={SupermanScreen} />
       <Tab.Screen name="Compte" component={ProfileScreen} />
     </Tab.Navigator>
   )
@@ -89,9 +96,10 @@ function CollaboratorTabs() {
 function AdminTabs() {
   return (
     <Tab.Navigator screenOptions={screenOptions(COLORS.primaryDark)}>
+      <Tab.Screen name="Accueil" component={HomeScreen} />
       <Tab.Screen name="Admin" component={AdminDashboardScreen} />
+      <Tab.Screen name="Gestion" component={AdminManagementScreen} />
       <Tab.Screen name="Statistiques" component={StatisticsScreen} />
-      <Tab.Screen name="SUPERMAN" component={SupermanScreen} />
       <Tab.Screen name="Compte" component={ProfileScreen} />
     </Tab.Navigator>
   )
