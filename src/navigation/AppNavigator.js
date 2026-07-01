@@ -7,6 +7,7 @@ import { useAuth } from '../context/AuthContext'
 import LoginScreen from '../screens/Auth/LoginScreen'
 import RegisterScreen from '../screens/Auth/RegisterScreen'
 import ForgotPasswordScreen from '../screens/Auth/ForgotPasswordScreen'
+import PublicHomeScreen from '../screens/Auth/PublicHomeScreen'
 import CitizenHomeScreen from '../screens/Citizen/CitizenHomeScreen'
 import CreateSignalementScreen from '../screens/Citizen/CreateSignalementScreen'
 import LiveCameraScreen from '../screens/Citizen/LiveCameraScreen'
@@ -138,6 +139,7 @@ export default function AppNavigator() {
         </>
       ) : ( 
         <>
+          <Stack.Screen name="PublicHome" component={PublicHomeScreen} />
           <Stack.Screen name="Login" component={LoginScreen} />
           <Stack.Screen name="Register" component={RegisterScreen} />
           <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />

@@ -2,7 +2,6 @@ import React, { useState } from 'react'
 import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import * as ImagePicker from 'expo-image-picker'
-import { requestCameraPermissionsAsync, requestMicrophonePermissionsAsync } from 'expo-camera'
 import { COLORS } from '../../config/env'
 import PrimaryButton from '../../components/PrimaryButton'
 import { createSignalement } from '../../services/api'
@@ -46,12 +45,6 @@ export default function CreateSignalementScreen({ navigation }) {
   }
 
   async function startLive() {
-    const cameraPermission = await requestCameraPermissionsAsync()
-    const microphonePermission = await requestMicrophonePermissionsAsync()
-    if (!cameraPermission.granted || !microphonePermission.granted) {
-      Alert.alert('Camera requise', 'Autorisez la camera et le micro pour lancer un live.')
-      return
-    }
     const coords = position || (await requestCurrentLocation())
     if (!coords) {
       Alert.alert('GPS requis', 'Activez la localisation avant le live.')
